@@ -1,0 +1,89 @@
+#!/bin/bash
+LOGLEVEL=${LOGLEVEL:-1}
+SIGNALS=($(echo ${SIGNALS:-HUP INT TERM}))
+
+freeze() { 
+	# temporarily disable signals
+	trap "" ${SIGNALS[@]}
+	echo "Freezing ${1}" 
+	if criu dump --tcp-established --shell-job -t "${1}" -v${LOGLEVEL} -D /dump
+	then
+		touch /dump/frozen
+		echo "Checkpoint completed"
+	else
+		touch /dump/rotten
+		echo "Checkpoint failed"
+	fi
+	# re-enable signals
+	trap - ${SIGNALS[@]}
+}
+
+upload() {
+	if [ -n "$S3" ] && [ -n "$(ls /dump)" ]
+	then
+		# wait to know if it's a good set 
+		while [ ! -f /dump/rotten ] && [ ! -f /dump/frozen ]
+		do
+			sleep 1
+		done
+		if [ -f /dump/frozen ]
+		then 
+			echo "Syncing to $S3" 
+			aws s3 sync --quiet /dump "$S3"
+			touch /dump/uploaded
+			aws s3 cp --quiet /dump/uploaded "$S3"
+			echo "Done"
+		else
+			ls -l /dump
+			echo "Not a valid dump, will not upload it" 
+		fi
+	fi 
+}
+
+
+if [ "$1" == "freeze" ]
+then
+	if [ -f /var/lock/freezer.lock ]
+	then 
+		freeze "$(cat /var/lock/freezer.lock)"
+	else
+		echo "No process to freeze"
+	fi
+	exit 0
+fi
+
+if [ -n "$S3" ]
+then
+	echo "Trying to load dump from $S3" 
+	aws s3 sync --quiet "$S3" /dump
+	if [ -f /dump/uploaded ]
+	then
+		echo "Found valid S3 snapshot"
+	else
+		echo "No valid S3 snapshot found"
+		rm -f /dump/*
+	fi
+fi
+
+if  [ -f /dump/frozen ]
+then
+	echo "Found frozen process, starting"
+	exec criu restore --tcp-established --shell-job -v${LOGLEVEL} -D /dump
+	exit 0
+fi 
+	
+if [ "$1" == "start" ]
+then
+	shift
+	"$@" &
+	pid=$!
+	trap "freeze $pid" ${SIGNALS[@]}
+	echo "${pid}" > /var/lock/freezer.lock
+	echo "Started $@"
+	wait 2>/dev/null
+	echo "Process $pid terminated"
+	upload
+else
+	exec "$@"
+fi
+
