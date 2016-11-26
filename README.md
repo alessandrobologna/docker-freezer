@@ -13,7 +13,7 @@ are that this project will become obsolete soon. But as I said it's an experimen
 To test, you can run this image with `sleep` as the process to hibernate, and your `/tmp` directory mounted as the `/dump` volume:
 
 ```bash
-$ docker run --privileged -v /tmp:/dump --name sleep alessandrob/freezer start sleep 100
+$ docker run --privileged -v /tmp:/dump --name sleep alessandrob/docker-freezer start sleep 100
 ```
 You can capture the state of the process by sending an interrupt (for instance, press ctrl+c on the console) or by executing
 ```bash
@@ -22,14 +22,14 @@ $ docker exec --privileged sleep freezer freeze
 Note that in both cases, after the process state is dumped, the container will exit.
 Restart it again, with 
 ```bash
-docker run --privileged -v /tmp:/dump --name sleep alessandrob/freezer start
+docker run --privileged -v /tmp:/dump --name sleep alessandrob/docker-freezer start
 ``` 
 and it will automatically load the state from your /tmp directory and resume where it left off (sleeping in this case...)
 
 ### Run it using S3
 
 ```bash
-docker run --privileged -e S3=s3://your.bucket/ --name sleep freezer start sleep 100
+docker run --privileged -e S3=s3://your.bucket/ --name sleep alessandrob/docker-freezer start sleep 100
 ```
 Note that, unless you are using IAM instance roles on AWS, you will also need to provide `-e AWS_ACCESS_KEY_ID=<yourkey> -e AWS_SECRET_ACCESS_KEY=<yoursecret>`
 Again, the process can be interrupted or frozen with `docker exec` as above, and the next time it start will use it's frozen state.
