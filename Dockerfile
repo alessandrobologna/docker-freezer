@@ -9,7 +9,7 @@ RUN apt-get update -q && apt-get install -qy --no-install-recommends \
 	python-pip curl \
 	&& pip install awscli \
 	&& wget -q https://github.com/xemul/criu/archive/v${CRIU_VERSION}.tar.gz \
-	&& tar xzf v2.7.tar.gz \	
+	&& tar xzf v${CRIU_VERSION}.tar.gz \	
 	&& cd criu-${CRIU_VERSION}/ && make -j \
 	&& cp criu/criu /usr/local/bin/criu \
     && apt-get purge -y --auto-remove build-essential protobuf-c-compiler\
