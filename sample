@@ -1,0 +1,6 @@
+#!/bin/bash
+for i in {0..100}
+do 
+	echo -e "$(date)\t$i" > /var/log/freezer/stdout
+	sleep 2
+done
