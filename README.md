@@ -1,4 +1,4 @@
-# docker-freezer
+### docker-freezer
 Use CRIU (Checkpoint/Restore in User space) to store the state of a process in S3 and restart it
 
 ### What is it 
@@ -16,6 +16,7 @@ two links for /dev/{stdout,stderr} in /var/log/freezer{stdout,stderr}, which mea
 To test, you can run this image with `sample` as the process to hibernate, and your `/tmp/dump` directory mounted as the `/dump` volume:
 
 ```bash
+
 $ mkdir /tmp/dump
 $ docker run --privileged -v /tmp/dump:/dump  alessandrob/docker-freezer start sample
 Starting 'sample'
@@ -28,6 +29,7 @@ Sat Nov 26 21:02:16 UTC 2016	4
 ```
 You can capture the state of the process by sending an interrupt (for instance, press ctrl+c on the console):
 ```bash
+
 Sat Nov 26 21:02:48 UTC 2016	20
 Sat Nov 26 21:02:50 UTC 2016	21
 Sat Nov 26 21:02:52 UTC 2016	22
@@ -40,6 +42,7 @@ Created valid dump
 ```
  or by executing
 ```bash
+
 $ docker ps
 CONTAINER ID        IMAGE                        COMMAND                  CREATED             STATUS              PORTS               NAMES
 2285e4adcea4        alessandrob/docker-freezer   "/usr/local/bin/freez"   6 seconds ago       Up 5 seconds                            small_mahavira
@@ -50,8 +53,8 @@ Checkpoint completed
 ```
 Note that in both cases, after the process state is dumped, the container will exit.
 Restart it again, with 
-
 ```bash
+
 $ docker run --privileged -v /tmp/dump:/dump  alessandrob/docker-freezer start sample
 Found frozen process, starting it instead of sample
 Sat Nov 26 21:05:14 UTC 2016	19
@@ -64,6 +67,7 @@ and it will automatically load the state from your `/tmp/dump` directory and res
 
 Note: in the examples below, please replace the AWS secrets and bucket with your own.
 ```bash
+
 $ docker run --privileged  -e AWS_ACCESS_KEY_ID=<yourkey> -e AWS_SECRET_ACCESS_KEY=<yoursecret> -e S3=s3://<yourbucket>/ alessandrob/docker-freezer start sample
 Trying to load dump from s3://<yourbucket>/
 No valid S3 snapshot found
@@ -80,6 +84,7 @@ Sat Nov 26 21:10:29 UTC 2016	5
 Note that if you are using IAM instance roles on AWS and running this there, you will not need to provide secrets.
 Press ctrl-c, or use `docker exec` as above, and then test resuming:
 ```bash
+
 $ docker run --privileged  -e AWS_ACCESS_KEY_ID=<yourkey> -e AWS_SECRET_ACCESS_KEY=<yoursecret> -e S3=s3://<yourbucket>/ alessandrob/docker-freezer start sample
 Trying to load dump from s3://<yourbucket>/
 Found valid S3 snapshot
@@ -95,4 +100,5 @@ Sat Nov 26 21:10:59 UTC 2016	13
 Sat Nov 26 21:11:01 UTC 2016	14
 Sat Nov 26 21:11:03 UTC 2016	15
 Sat Nov 26 21:11:05 UTC 2016	16
+```
  
