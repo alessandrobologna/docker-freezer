@@ -108,7 +108,7 @@ As it turns out, the current AWS Linux AMIs that are used by default in the clus
 configuration do not support the kernel features that are [required by criu](https://criu.org/Installation#Configuring_the_kernel)
 So, and this is not maybe for the faint of heart, here are some instructions on how to build a new kernel based on the last ECS AMIs.
 
-1. Start a new instance choosing in the amazon marketplace the current ECS AMI (just filter for ECS). 
+- Start a new instance choosing in the amazon marketplace the current ECS AMI (just filter for ECS). 
 It helps to give it a larger root volume, because the compilation step will take some time.
 Then, ssh into the instance and if there packages that needs updates, run the following
 
@@ -118,7 +118,7 @@ $ sudo -s
 # reboot
 ```
 
-2. Then, after reboot, ssh again and:
+- Then, after reboot, ssh again and:
 ```bash
 $ sudo -s
 # sudo /usr/bin/get_reference_source -p kernel-$(uname -r)
@@ -127,7 +127,7 @@ $ sudo -s
 # /bin/rpm -Uvh /usr/src/srpm/debug/kernel*.src.rpm
 ```
 
-3. At this point, edit both `/usr/src/rpm/SPECS/kernel.spec` to change `buildid`, a `/usr/src/rpm/SOURCES/config-generic` to reflect the
+- At this point, edit both `/usr/src/rpm/SPECS/kernel.spec` to change `buildid`, a `/usr/src/rpm/SOURCES/config-generic` to reflect the
 kernel configuration required by criu.
 As of today, the only things that need to be changed are:
 
@@ -140,12 +140,12 @@ CONFIG_PACKET_DIAG=y
 CONFIG_NETLINK_DIAG=y
 ```
 
-4. Now it's time to build. 
+- Now it's time to build. 
 ```bash
 # /usr/bin/rpmbuild -bb /usr/src/rpm/SPECS/kernel.spec
 ```
 
-5. When asked if you want to `Track memory changes (MEM_SOFT_DIRTY)` reply yes.
+- When asked if you want to `Track memory changes (MEM_SOFT_DIRTY)` reply yes.
 At the end of the process (it will take a while), install the new kernel:
 
 ```bash
@@ -153,7 +153,7 @@ At the end of the process (it will take a while), install the new kernel:
 # cat /boot/grub/menu.lst 
 ```
 
-6. You should see the new kernel listed as default. Reboot.
+- You should see the new kernel listed as default. Reboot.
 Finally, to build the AMI, ssh again into the server and do some cleanup:
 
 ```bash 
@@ -164,4 +164,4 @@ Finally, to build the AMI, ssh again into the server and do some cleanup:
 #  find /root/.*history /home/*/.*history -exec rm -f {} \;
 ```
 
-7. Finally generate your criu-enabled AMI from the EC2 console, and you are done
+- Finally generate your criu-enabled AMI from the EC2 console, and you are done
