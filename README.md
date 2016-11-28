@@ -112,14 +112,14 @@ So, and this is not maybe for the faint of heart, here are some instructions on 
 It helps to give it a larger root volume, because the compilation step will take some time.
 Then, ssh into the instance and if there packages that needs updates, run the following
 
-```bash
+```
 $ sudo -s
 # yum update
 # reboot
 ```
 
 - Then, after reboot, ssh again and:
-```bash
+```
 $ sudo -s
 # sudo /usr/bin/get_reference_source -p kernel-$(uname -r)
 # /usr/bin/yum install -y gcc gcc44 system-rpm-config m4 rpm-build gdb xmlto asciidoc elfutils-devel zlib-devel binutils-devel python-devel perl gettext newt-devel perl-ExtUtils-Embed bison audit-libs-devel python27-devel pciutils-devel bc openssl-devel numactl-devel 
@@ -141,14 +141,14 @@ CONFIG_NETLINK_DIAG=y
 ```
 
 - Now it's time to build. 
-```bash
+```
 # /usr/bin/rpmbuild -bb /usr/src/rpm/SPECS/kernel.spec
 ```
 
 - When asked if you want to `Track memory changes (MEM_SOFT_DIRTY)` reply yes.
 At the end of the process (it will take a while), install the new kernel:
 
-```bash
+```
 # /usr/bin/yum localinstall /usr/src/rpm/RPMS/x86_64/kernel-*.x86_64.rpm 
 # cat /boot/grub/menu.lst 
 ```
@@ -156,7 +156,7 @@ At the end of the process (it will take a while), install the new kernel:
 - You should see the new kernel listed as default. Reboot.
 Finally, to build the AMI, ssh again into the server and do some cleanup:
 
-```bash 
+```
 # /usr/bin/yum remove -y gcc gcc44 system-rpm-config m4 rpm-build gdb xmlto asciidoc elfutils-devel zlib-devel binutils-devel python-devel perl gettext newt-devel perl-ExtUtils-Embed bison audit-libs-devel python27-devel pciutils-devel bc openssl-devel numactl-devel 
 # rm -rf /usr/src/srpm/debug/*
 # rm -rf /usr/src/rpm
