@@ -37,7 +37,7 @@ upload() {
 			if [ -n "$S3" ]
 			then
 				echo "Syncing to $S3" 
-				aws s3 sync --quiet /dump "$S3"
+				aws s3 sync --quiet --delete /dump "$S3"
 				touch /dump/uploaded
 				aws s3 cp --quiet /dump/uploaded "$S3"
 				echo "Done"
