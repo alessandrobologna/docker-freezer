@@ -139,6 +139,13 @@ CONFIG_INET_UDP_DIAG=y
 CONFIG_PACKET_DIAG=y
 CONFIG_NETLINK_DIAG=y
 ```
+Note that for some of them, the current configuration is set to 'module' (m). In that case, you could leave the configuration as is, and  the module can be loaded at runtime with `sudo modprobe <module>`.
+For instance, the following may need to be changed to `=y` as well:
+```
+CONFIG_IP_NF_IPTABLES=m
+CONFIG_IP6_NF_IPTABLES=m
+```
+
 
 - Now it's time to build. 
 ```
