@@ -1,7 +1,7 @@
 #!/bin/bash
 LOGLEVEL=${LOGLEVEL:-2}
 SIGNALS=($(echo ${SIGNALS:-HUP INT TERM}))
-EXCLUDES=${EXCLUDES:-^/proc/|^/sys/|^/dump}
+EXCLUDES=${EXCLUDES:-^/proc/|^/sys/|^/dump/|^/var/log/freezer/}
 
 # create links for stdout and stderr, they need be used by the app
 mkdir -p /var/log/freezer/ \
