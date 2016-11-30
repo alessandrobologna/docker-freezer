@@ -14,8 +14,8 @@ freeze() {
 	echo "Freezing ${1}" 
 	if criu dump --tcp-established --shell-job  -t "${1}" -v${LOGLEVEL} -D /dump
 	then
-		echo "Archiving changes"
-		find / -newer /var/lock/freezer.lock -type f | egrep -v "${EXCLUDES}" | xargs tar czf /dump/updates.tar.gz  
+		echo "Archiving changes" 
+		find / -newer /var/lock/freezer.lock -type f 2>/dev/null| egrep -v "${EXCLUDES}" | xargs tar czf /dump/updates.tar.gz  2>/dev/null 
 		touch /dump/frozen
 		echo "Checkpoint completed"
 	else
