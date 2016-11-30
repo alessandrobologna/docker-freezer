@@ -1,6 +1,7 @@
 #!/bin/bash
 LOGLEVEL=${LOGLEVEL:-2}
 SIGNALS=($(echo ${SIGNALS:-HUP INT TERM}))
+EXCLUDES=${EXCLUDES:-^/proc/|^/sys/|^/dump}
 
 # create links for stdout and stderr, they need be used by the app
 mkdir -p /var/log/freezer/ \
@@ -13,6 +14,8 @@ freeze() {
 	echo "Freezing ${1}" 
 	if criu dump --tcp-established --shell-job  -t "${1}" -v${LOGLEVEL} -D /dump
 	then
+		echo "Archiving changes"
+		find / -newer /var/lock/freezer.lock -type f | egrep -v "${EXCLUDES}" | xargs tar czf /dump/updates.tar.gz  
 		touch /dump/frozen
 		echo "Checkpoint completed"
 	else
@@ -79,6 +82,11 @@ then
 	if  [ -f /dump/frozen ]
 	then
 		echo "Found frozen process, starting it instead of '$@'"
+		if [ -f /dump/updates.tar.gz ]
+		then
+			echo "Restoring changed files"
+			cd / && tar xvfz /dump/updates.tar.gz
+		fi
 		exec criu restore --tcp-established --shell-job  -v${LOGLEVEL} -D /dump
 	else
 		# start provided comand in background
