@@ -18,6 +18,14 @@ freeze() {
 		find / -newer /var/lock/freezer.lock -type f 2>/dev/null| egrep -v "${EXCLUDES}" | xargs tar czf /dump/updates.tar.gz  2>/dev/null 
 		touch /dump/frozen
 		echo "Checkpoint completed"
+		if [ -n "$S3" ]
+		then
+			echo "Syncing to $S3" 
+			aws s3 sync --quiet --delete /dump "$S3"
+			touch /dump/uploaded
+			aws s3 cp --quiet /dump/uploaded "$S3"
+			echo "Done"
+		fi
 	else
 		touch /dump/rotten
 		echo "Checkpoint failed"
@@ -26,37 +34,12 @@ freeze() {
 	trap - ${SIGNALS[@]}
 }
 
-upload() {
-	if [ -n "$(ls /dump)" ]
-	then
-		# wait to know if it's a good set 
-		while [ ! -f /dump/rotten ] && [ ! -f /dump/frozen ]
-		do
-			sleep 1
-		done
-		if  [ -f /dump/frozen ]
-		then 
-			echo "Created valid dump" 
-			if [ -n "$S3" ]
-			then
-				echo "Syncing to $S3" 
-				aws s3 sync --quiet --delete /dump "$S3"
-				touch /dump/uploaded
-				aws s3 cp --quiet /dump/uploaded "$S3"
-				echo "Done"
-			fi
-		else
-			echo "Not a valid dump, will not upload it" 
-		fi
-	fi 
-}
-
 
 if [ "$1" == "freeze" ]
 then
 	if [ -f /var/lock/freezer.lock ]
 	then 
-		freeze "$(cat /var/lock/freezer.lock)"
+		kill -s INT 1
 	else
 		echo "No process to freeze"
 	fi
@@ -100,7 +83,6 @@ then
 			echo "'$@' was started"
 			wait 2>/dev/null
 			echo "Process $pid terminated"
-			upload
 		else
 			echo "Please provide a command to start"
 		fi
