@@ -1,7 +1,9 @@
 #!/bin/bash
-LOGLEVEL=${LOGLEVEL:-2}
-SIGNALS=($(echo ${SIGNALS:-HUP INT TERM}))
-EXCLUDES=${EXCLUDES:-^/proc/|^/sys/|^/dump/|^/var/log/freezer/}
+CRIU_LOGLEVEL=${CRIU_LOGLEVEL:-2}
+CRIU_SIGNALS=${CRIU_SIGNALS:-HUP INT TERM}
+CRIU_EXCLUDES=${CRIU_EXCLUDES:-^/proc/|^/sys/|^/dump/|^/var/log/freezer/}
+CRIU_DUMP_OPTIONS="${CRIU_DUMP_OPTIONS:---shell-job}"
+CRIU_RESTORE_OPTIONS="${CRIU_RESTORE_OPTIONS:---shell-job}"
 
 # create links for stdout and stderr, they need be used by the app
 mkdir -p /var/log/freezer/ \
@@ -10,12 +12,12 @@ mkdir -p /var/log/freezer/ \
 	
 freeze() { 
 	# temporarily disable signals
-	trap "" ${SIGNALS[@]}
+	trap "" ${SIGNALS}
 	echo "Freezing ${1}" 
-	if criu dump --tcp-established --shell-job  -t "${1}" -v${LOGLEVEL} -D /dump
+	if criu dump ${CRIU_DUMP_OPTIONS} -t "${1}" -v${CRIU_LOGLEVEL} -D /dump
 	then
 		echo "Archiving changes" 
-		find / -newer /var/lock/freezer.lock -type f 2>/dev/null| egrep -v "${EXCLUDES}" | xargs tar czf /dump/updates.tar.gz  2>/dev/null 
+		find / -newer /var/lock/freezer.lock -type f 2>/dev/null| egrep -v "${CRIU_EXCLUDES}" | xargs tar czf /dump/updates.tar.gz  2>/dev/null 
 		touch /dump/frozen
 		echo "Checkpoint completed"
 		if [ -n "$S3" ]
@@ -31,7 +33,7 @@ freeze() {
 		echo "Checkpoint failed"
 	fi
 	# re-enable signals
-	trap - ${SIGNALS[@]}
+	trap - ${SIGNALS}
 }
 
 
@@ -70,7 +72,7 @@ then
 			echo "Restoring changed files"
 			cd / && tar xvfz /dump/updates.tar.gz
 		fi
-		exec criu restore --tcp-established --shell-job  -v${LOGLEVEL} -D /dump
+		exec criu restore ${CRIU_RESTORE_OPTIONS} -v${CRIU_LOGLEVEL} -D /dump
 	else
 		# start provided comand in background
 		if [ $# -gt 0 ]
@@ -78,7 +80,7 @@ then
 			echo "Starting '$@'"
 			"$@"  &
 			pid=$!
-			trap "freeze $pid" ${SIGNALS[@]}
+			trap "freeze $pid" ${SIGNALS}
 			echo "${pid}" > /var/lock/freezer.lock
 			echo "'$@' was started"
 			wait 2>/dev/null
