@@ -12,7 +12,7 @@ mkdir -p /var/log/freezer/ \
 	
 freeze() { 
 	# temporarily disable signals
-	trap "" ${SIGNALS}
+	trap "" ${CRIU_SIGNALS}
 	echo "Freezing ${1}" 
 	if criu dump ${CRIU_DUMP_OPTIONS} -t "${1}" -v${CRIU_LOGLEVEL} -D /dump
 	then
@@ -33,7 +33,7 @@ freeze() {
 		echo "Checkpoint failed"
 	fi
 	# re-enable signals
-	trap - ${SIGNALS}
+	trap - ${CRIU_SIGNALS}
 }
 
 
@@ -80,7 +80,7 @@ then
 			echo "Starting '$@'"
 			"$@"  &
 			pid=$!
-			trap "freeze $pid" ${SIGNALS}
+			trap "freeze $pid" ${CRIU_SIGNALS}
 			echo "${pid}" > /var/lock/freezer.lock
 			echo "'$@' was started"
 			wait 2>/dev/null
