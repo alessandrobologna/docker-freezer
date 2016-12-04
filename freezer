@@ -23,9 +23,9 @@ freeze() {
 		if [ -n "$S3" ]
 		then
 			echo "Syncing to $S3" 
-			aws s3 sync --quiet --delete /dump "$S3"
+			aws s3 sync --delete /dump "$S3"
 			touch /dump/uploaded
-			aws s3 cp --quiet /dump/uploaded "$S3"
+			aws s3 cp /dump/uploaded "$S3"
 			echo "Done"
 		fi
 	else
@@ -51,7 +51,7 @@ fi
 if [ -n "$S3" ]
 then
 	echo "Trying to load dump from $S3" 
-	aws s3 sync --quiet "$S3" /dump
+	aws s3 sync "$S3" /dump
 	if [ -f /dump/uploaded ]
 	then
 		echo "Found valid S3 snapshot"
